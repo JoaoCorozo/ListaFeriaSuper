@@ -49,7 +49,8 @@
               Productos de <span id="categoria-actual-label">Feria</span>
             </h2>
             <p class="section-subtitle">
-              Toca un producto para agregarlo a tu lista.
+              Toca un producto para agregarlo a tu lista. Marca ⭐ para
+              convertirlo en favorito.
             </p>
           </div>
 
@@ -61,6 +62,13 @@
             placeholder="Buscar producto..."
             autocomplete="off"
           />
+
+          <div class="catalog-filters">
+            <label>
+              <input type="checkbox" id="filtro-favoritos" />
+              Mostrar solo favoritos
+            </label>
+          </div>
 
           <div id="catalogo" class="catalog-grid"></div>
         </section>
@@ -134,7 +142,7 @@
           </div>
 
           <!-- Comprados (colapsable) -->
-                    <div class="lista-bloque">
+          <div class="lista-bloque">
             <h3 class="lista-subtitulo collapsible" id="toggle-comprados">
               Comprados (
               <span id="count-comprados-header">0</span>
@@ -143,28 +151,29 @@
             </h3>
             <ul id="lista-comprados" class="lista"></ul>
           </div>
-          <!-- Botón para guardar la compra en historial -->
-              <button
-                type="button"
-                id="btn-guardar-historial"
-                class="btn-primary btn-small guardar-historial-lista-btn">
-                Guardar compra en historial
-              </button>
-          
-        </section>
 
+          <!-- Botón para guardar la compra en historial -->
+          <button
+            type="button"
+            id="btn-guardar-historial"
+            class="btn-primary btn-small guardar-historial-lista-btn"
+          >
+            Guardar compra en historial
+          </button>
+        </section>
       </main>
 
       <!-- HISTORIAL / ESTADÍSTICAS -->
-            <section class="history-section card">
+      <section class="history-section card">
         <div class="section-header">
           <h2>Historial y estadísticas</h2>
           <p class="section-subtitle">
-            Revisa qué compras más y en qué gastas más, filtrando por fecha.
+            Revisa qué compras más y en qué gastas más, filtrando por fecha y
+            categoría.
           </p>
         </div>
 
-                <div class="history-controls">
+        <div class="history-controls">
           <label>
             Desde:
             <input type="date" id="historial-desde" />
@@ -193,17 +202,59 @@
           </button>
         </div>
 
-
         <div id="historial-resumen" class="history-summary">
           <p>No hay datos en el historial todavía.</p>
         </div>
-      </section>
 
+        <div id="historial-graficos" class="history-charts"></div>
+
+        <div class="history-extra-actions">
+          <button
+            type="button"
+            id="btn-exportar-historial"
+            class="btn-secondary btn-small"
+          >
+            Exportar historial (CSV)
+          </button>
+
+          <button
+            type="button"
+            id="btn-backup-historial"
+            class="btn-secondary btn-small"
+          >
+            Descargar backup (JSON)
+          </button>
+
+          <label class="backup-input-label">
+            Restaurar backup
+            <input
+              type="file"
+              id="input-restaurar-backup"
+              accept="application/json"
+            />
+          </label>
+
+          <button
+            type="button"
+            id="btn-borrar-historial"
+            class="btn-danger btn-small"
+          >
+            Borrar historial
+          </button>
+        </div>
+      </section>
 
       <!-- FOOTER -->
       <footer class="app-footer">
         <span id="app-version"></span>
         <span id="online-status" class="online-pill"></span>
+        <button
+          type="button"
+          id="btn-toggle-tema"
+          class="btn-secondary btn-small footer-theme-btn"
+        >
+          Modo oscuro
+        </button>
       </footer>
     </div>
 

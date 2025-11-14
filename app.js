@@ -1,5 +1,5 @@
 // Versión de la app
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 
 // -----------------------------
 // Catálogo de productos
@@ -114,6 +114,8 @@ let categoriaActual = "feria";
 let productoSeleccionado = null;
 let items = JSON.parse(localStorage.getItem("lista_compras") || "[]");
 let historial = JSON.parse(localStorage.getItem("historial_compras") || "[]");
+let favoritos = JSON.parse(localStorage.getItem("favoritos_productos") || "[]");
+let ultimoFiltradoHistorial = [];
 
 // DOM
 const catButtons = document.querySelectorAll(".cat-btn");
@@ -121,6 +123,7 @@ const categoriaLabel = document.getElementById("categoria-actual-label");
 const labelListaCategoria = document.getElementById("label-lista-categoria");
 const catalogo = document.getElementById("catalogo");
 const buscador = document.getElementById("buscador");
+const filtroFavoritosCheckbox = document.getElementById("filtro-favoritos");
 
 const listaPendientesEl = document.getElementById("lista-pendientes");
 const listaCompradosEl = document.getElementById("lista-comprados");
@@ -139,7 +142,6 @@ const btnBorrarTodo = document.getElementById("btn-borrar-todo");
 const btnBorrarComprados = document.getElementById("btn-borrar-comprados");
 const btnExportarLista = document.getElementById("btn-exportar-lista");
 
-
 // Historial DOM
 const btnGuardarHistorial = document.getElementById("btn-guardar-historial");
 const historialDesdeInput = document.getElementById("historial-desde");
@@ -147,12 +149,16 @@ const historialHastaInput = document.getElementById("historial-hasta");
 const historialCategoriaSelect = document.getElementById("historial-categoria");
 const btnAplicarRango = document.getElementById("btn-aplicar-rango");
 const historialResumenEl = document.getElementById("historial-resumen");
-
-
+const historialGraficosEl = document.getElementById("historial-graficos");
+const btnExportarHistorial = document.getElementById("btn-exportar-historial");
+const btnBackupHistorial = document.getElementById("btn-backup-historial");
+const inputRestaurarBackup = document.getElementById("input-restaurar-backup");
+const btnBorrarHistorial = document.getElementById("btn-borrar-historial");
 
 // Footer DOM
 const appVersionEl = document.getElementById("app-version");
 const onlineStatusEl = document.getElementById("online-status");
+const btnToggleTema = document.getElementById("btn-toggle-tema");
 
 // Catálogo toggle
 const catalogSection = document.querySelector(".catalog-section");
@@ -168,7 +174,9 @@ const modalPrecio = document.getElementById("modal-precio");
 const modalCancelar = document.getElementById("modal-cancelar");
 const modalForm = document.getElementById("modal-form");
 
-// Guardar en localStorage
+// -----------------------------
+// Persistencia
+// -----------------------------
 function guardar() {
   localStorage.setItem("lista_compras", JSON.stringify(items));
 }
@@ -177,7 +185,13 @@ function guardarHistorial() {
   localStorage.setItem("historial_compras", JSON.stringify(historial));
 }
 
+function guardarFavoritos() {
+  localStorage.setItem("favoritos_productos", JSON.stringify(favoritos));
+}
+
+// -----------------------------
 // Stats
+// -----------------------------
 function actualizarStats(listaVisible) {
   const total = listaVisible.length;
   const comprados = listaVisible.filter(i => i.comprado).length;
@@ -188,7 +202,25 @@ function actualizarStats(listaVisible) {
   statComprados.textContent = comprados;
 }
 
-// Render catálogo con búsqueda
+// -----------------------------
+// Favoritos
+// -----------------------------
+function esFavorito(id) {
+  return favoritos.includes(id);
+}
+
+function toggleFavorito(id) {
+  if (esFavorito(id)) {
+    favoritos = favoritos.filter(f => f !== id);
+  } else {
+    favoritos.push(id);
+  }
+  guardarFavoritos();
+}
+
+// -----------------------------
+// Catálogo con búsqueda + favoritos
+// -----------------------------
 function renderCatalogo() {
   catalogo.innerHTML = "";
 
@@ -197,12 +229,14 @@ function renderCatalogo() {
   labelListaCategoria.textContent = nombreCat;
 
   const texto = buscador.value.toLowerCase().trim();
+  const soloFavs = filtroFavoritosCheckbox?.checked;
 
-  const productosFiltrados = PRODUCTOS.filter(
-    p =>
-      p.categoria === categoriaActual &&
-      p.nombre.toLowerCase().includes(texto)
-  );
+  const productosFiltrados = PRODUCTOS.filter(p => {
+    if (p.categoria !== categoriaActual) return false;
+    if (!p.nombre.toLowerCase().includes(texto)) return false;
+    if (soloFavs && !esFavorito(p.id)) return false;
+    return true;
+  });
 
   productosFiltrados.forEach(p => {
     const card = document.createElement("article");
@@ -232,8 +266,19 @@ function renderCatalogo() {
     body.appendChild(nombreEl);
     body.appendChild(metaEl);
 
+    // Botón favorito
+    const favBtn = document.createElement("button");
+    favBtn.className = "fav-btn" + (esFavorito(p.id) ? " fav-active" : "");
+    favBtn.textContent = "★";
+    favBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      toggleFavorito(p.id);
+      renderCatalogo();
+    });
+
     card.appendChild(imgWrapper);
     card.appendChild(body);
+    card.appendChild(favBtn);
 
     card.addEventListener("click", () => abrirModalAgregar(p));
 
@@ -241,7 +286,9 @@ function renderCatalogo() {
   });
 }
 
+// -----------------------------
 // Modal
+// -----------------------------
 function abrirModalAgregar(producto) {
   productoSeleccionado = producto;
 
@@ -321,7 +368,9 @@ modal.addEventListener("click", e => {
   if (e.target === modal) cerrarModal();
 });
 
+// -----------------------------
 // Agregar manual
+// -----------------------------
 formManual.addEventListener("submit", e => {
   e.preventDefault();
   const nombre = inputManualNombre.value.trim();
@@ -339,7 +388,9 @@ formManual.addEventListener("submit", e => {
   inputManualNombre.value = "";
 });
 
-// Crear item
+// -----------------------------
+// Crear item de lista
+// -----------------------------
 function crearItemElemento(item, index) {
   const li = document.createElement("li");
   li.className = "item" + (item.comprado ? " item-comprado" : "");
@@ -471,7 +522,9 @@ function crearItemElemento(item, index) {
   return li;
 }
 
+// -----------------------------
 // Render lista
+// -----------------------------
 function renderLista() {
   listaPendientesEl.innerHTML = "";
   listaCompradosEl.innerHTML = "";
@@ -495,7 +548,9 @@ function renderLista() {
   countCompradosHeader.textContent = visibles.filter(i => i.comprado).length;
 }
 
-// Eventos categoría
+// -----------------------------
+// Eventos de categoría
+// -----------------------------
 catButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     const cat = btn.dataset.categoria;
@@ -514,6 +569,13 @@ catButtons.forEach(btn => {
 // Búsqueda
 if (buscador) {
   buscador.addEventListener("input", () => {
+    renderCatalogo();
+  });
+}
+
+// Filtro solo favoritos
+if (filtroFavoritosCheckbox) {
+  filtroFavoritosCheckbox.addEventListener("change", () => {
     renderCatalogo();
   });
 }
@@ -549,7 +611,9 @@ btnBorrarTodo.addEventListener("click", () => {
 });
 
 btnBorrarComprados.addEventListener("click", () => {
-  const hayComprados = items.some(i => i.categoria === categoriaActual && i.comprado);
+  const hayComprados = items.some(
+    i => i.categoria === categoriaActual && i.comprado
+  );
   if (!hayComprados) return;
 
   if (!confirm("¿Borrar solo los productos comprados de esta categoría?"))
@@ -600,11 +664,15 @@ btnExportarLista.addEventListener("click", () => {
   }
 });
 
-// Guardar compra en historial
+// -----------------------------
+// Historial
+// -----------------------------
 function guardarHistorialDeComprados() {
   const comprados = items.filter(i => i.comprado);
   if (!comprados.length) {
-    alert("Marca algunos productos como comprados antes de guardar el historial.");
+    alert(
+      "Marca algunos productos como comprados antes de guardar el historial."
+    );
     return;
   }
 
@@ -639,13 +707,49 @@ function guardarHistorialDeComprados() {
   actualizarVistaHistorial();
 }
 
-// Vista del historial
+// Gráficos del historial
+function renderGraficosHistorial(filas) {
+  if (!historialGraficosEl) return;
+
+  if (!filas.length) {
+    historialGraficosEl.innerHTML = "";
+    return;
+  }
+
+  const top = filas.slice(0, 5);
+  const maxGastado =
+    Math.max(...top.map(f => f.totalGastado || 0).filter(v => v >= 0)) || 1;
+
+  let html = '<div class="chart-block">';
+  html += "<h4>Top productos por gasto</h4>";
+  html += '<div class="chart-bars">';
+
+  top.forEach(f => {
+    const width = ((f.totalGastado || 0) / maxGastado) * 100;
+    html += `
+      <div class="chart-row">
+        <span class="chart-label">${f.nombre}</span>
+        <div class="chart-bar-wrapper">
+          <div class="chart-bar" style="width:${width}%;"></div>
+        </div>
+        <span class="chart-value">$${(f.totalGastado || 0).toFixed(0)}</span>
+      </div>
+    `;
+  });
+
+  html += "</div></div>";
+  historialGraficosEl.innerHTML = html;
+}
+
+// Vista del historial (con eliminación por registro)
 function actualizarVistaHistorial() {
   if (!historialResumenEl) return;
 
   if (!historial.length) {
     historialResumenEl.innerHTML =
       "<p>No hay datos en el historial todavía.</p>";
+    historialGraficosEl.innerHTML = "";
+    ultimoFiltradoHistorial = [];
     return;
   }
 
@@ -657,34 +761,36 @@ function actualizarVistaHistorial() {
   let hasta = null;
 
   if (desdeStr) {
-    // inicio del día
     desde = new Date(desdeStr + "T00:00:00");
   }
   if (hastaStr) {
-    // fin del día
     hasta = new Date(hastaStr + "T23:59:59");
   }
 
-  const filtrado = historial.filter(reg => {
-    const d = reg.timestamp ? new Date(reg.timestamp) : new Date(reg.fecha);
-    if (isNaN(d)) return false;
+  const filtrado = historial
+    .map((reg, idx) => ({ ...reg, __index: idx }))
+    .filter(reg => {
+      const d = reg.timestamp ? new Date(reg.timestamp) : new Date(reg.fecha);
+      if (isNaN(d)) return false;
 
-    // rango de fechas
-    if (desde && d < desde) return false;
-    if (hasta && d > hasta) return false;
+      if (desde && d < desde) return false;
+      if (hasta && d > hasta) return false;
 
-    // filtro por categoría
-    if (catFiltro !== "todas" && reg.categoria !== catFiltro) return false;
+      if (catFiltro !== "todas" && reg.categoria !== catFiltro) return false;
 
-    return true;
-  });
+      return true;
+    });
+
+  ultimoFiltradoHistorial = filtrado;
 
   if (!filtrado.length) {
     historialResumenEl.innerHTML =
       "<p>No hay datos en este rango de fechas / categoría.</p>";
+    historialGraficosEl.innerHTML = "";
     return;
   }
 
+  // ------- RESUMEN AGRUPADO POR PRODUCTO -------
   const agrupado = {};
   filtrado.forEach(reg => {
     const key = reg.nombre;
@@ -715,7 +821,8 @@ function actualizarVistaHistorial() {
     totalGlobal += f.totalGastado;
   });
 
-  let html = "<table><thead>";
+  let html = "<h4>Resumen por producto</h4>";
+  html += "<table><thead>";
   html +=
     "<tr><th>Producto</th><th>Categoría</th><th>Veces</th><th>Cant. total</th><th>Gastado aprox.</th></tr>";
   html += "</thead><tbody>";
@@ -735,20 +842,174 @@ function actualizarVistaHistorial() {
     0
   )}</strong></p>`;
 
+  // ------- DETALLE POR REGISTRO (para poder borrar) -------
+  html += `<h4 style="margin-top:0.8rem;">Detalle de compras en este rango</h4>`;
+  html += "<table><thead>";
+  html +=
+    "<tr><th>Fecha</th><th>Producto</th><th>Categoría</th><th>Cant.</th><th>Unidad</th><th>Precio</th><th></th></tr>";
+  html += "</thead><tbody>";
+
+  filtrado.forEach(reg => {
+    html += "<tr>";
+    html += `<td>${reg.fecha || ""}</td>`;
+    html += `<td>${reg.nombre}</td>`;
+    html += `<td>${reg.categoria === "feria" ? "Feria" : "Super"}</td>`;
+    html += `<td>${reg.cantidad ?? "-"}</td>`;
+    html += `<td>${reg.unidad ?? "-"}</td>`;
+    html += `<td>${
+      reg.precio != null ? "$" + Number(reg.precio).toFixed(0) : "-"
+    }</td>`;
+    html += `<td><button class="btn-danger btn-small btn-eliminar-registro" data-hindex="${reg.__index}">Eliminar</button></td>`;
+    html += "</tr>";
+  });
+
+  html += "</tbody></table>";
+
   historialResumenEl.innerHTML = html;
+
+  // Conectar botones de eliminar
+  const botonesEliminar = historialResumenEl.querySelectorAll(
+    ".btn-eliminar-registro"
+  );
+  botonesEliminar.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.dataset.hindex);
+      if (Number.isNaN(idx)) return;
+
+      if (!confirm("¿Eliminar este producto del historial?")) return;
+
+      historial.splice(idx, 1);
+      guardarHistorial();
+      actualizarVistaHistorial();
+    });
+  });
+
+  // gráficos basados en el resumen
+  renderGraficosHistorial(filas);
 }
 
+// Exportar historial a CSV (filtrado actual)
+function exportarHistorialCSV() {
+  if (!ultimoFiltradoHistorial.length) {
+    alert("No hay datos en este rango para exportar.");
+    return;
+  }
 
+  const encabezados = [
+    "fecha",
+    "nombre",
+    "categoria",
+    "cantidad",
+    "unidad",
+    "precio"
+  ];
 
-// Eventos historial
+  const filas = ultimoFiltradoHistorial.map(reg => [
+    reg.fecha || "",
+    reg.nombre || "",
+    reg.categoria || "",
+    reg.cantidad ?? "",
+    reg.unidad ?? "",
+    reg.precio ?? ""
+  ]);
+
+  let csv = encabezados.join(";") + "\n";
+  filas.forEach(row => {
+    csv += row.map(v => String(v).replace(/;/g, ",")).join(";") + "\n";
+  });
+
+  const blob = new Blob([csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "historial_compras.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Backup / restore historial
+function descargarBackupHistorial() {
+  const data = JSON.stringify({ version: APP_VERSION, historial }, null, 2);
+  const blob = new Blob([data], {
+    type: "application/json"
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "historial_backup.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function restaurarBackupDesdeArchivo(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const contenido = JSON.parse(e.target.result);
+      let nuevoHistorial = null;
+
+      if (Array.isArray(contenido)) {
+        nuevoHistorial = contenido;
+      } else if (contenido && Array.isArray(contenido.historial)) {
+        nuevoHistorial = contenido.historial;
+      }
+
+      if (!nuevoHistorial) {
+        alert("Archivo de backup no válido.");
+        return;
+      }
+
+      historial = nuevoHistorial;
+      guardarHistorial();
+      actualizarVistaHistorial();
+      alert("Backup restaurado correctamente.");
+    } catch (err) {
+      alert("No se pudo leer el backup. Archivo inválido.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Borrar historial completo
+function borrarHistorialCompleto() {
+  if (!historial.length) {
+    alert("No hay datos en el historial para borrar.");
+    return;
+  }
+
+  if (
+    confirm(
+      "¿Seguro que quieres borrar TODO el historial guardado? Esta acción no se puede deshacer."
+    )
+  ) {
+    historial = [];
+    guardarHistorial();
+    actualizarVistaHistorial();
+  }
+}
+
 // Eventos historial
 btnGuardarHistorial.addEventListener("click", guardarHistorialDeComprados);
 btnAplicarRango.addEventListener("click", actualizarVistaHistorial);
 historialCategoriaSelect.addEventListener("change", actualizarVistaHistorial);
+btnExportarHistorial.addEventListener("click", exportarHistorialCSV);
+btnBackupHistorial.addEventListener("click", descargarBackupHistorial);
+inputRestaurarBackup.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (file) restaurarBackupDesdeArchivo(file);
+  e.target.value = "";
+});
+btnBorrarHistorial.addEventListener("click", borrarHistorialCompleto);
 
-
-
+// -----------------------------
 // Versión y estado online
+// -----------------------------
 if (appVersionEl) {
   appVersionEl.textContent = "Versión " + APP_VERSION;
 }
@@ -767,8 +1028,49 @@ function actualizarEstadoOnline() {
 window.addEventListener("online", actualizarEstadoOnline);
 window.addEventListener("offline", actualizarEstadoOnline);
 
+// -----------------------------
+// Tema claro / oscuro
+// -----------------------------
+function setTema(tema) {
+  if (tema === "oscuro") {
+    document.body.classList.add("dark-mode");
+  } else {
+    document.body.classList.remove("dark-mode");
+  }
+  localStorage.setItem("tema_preferencia", tema);
+  if (btnToggleTema) {
+    btnToggleTema.textContent =
+      tema === "oscuro" ? "Modo claro" : "Modo oscuro";
+  }
+}
+
+function aplicarTemaInicial() {
+  const guardado = localStorage.getItem("tema_preferencia");
+  let tema;
+
+  if (guardado === "oscuro" || guardado === "claro") {
+    tema = guardado;
+  } else {
+    tema = window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "oscuro"
+      : "claro";
+  }
+
+  setTema(tema);
+}
+
+if (btnToggleTema) {
+  btnToggleTema.addEventListener("click", () => {
+    const esOscuro = document.body.classList.contains("dark-mode");
+    setTema(esOscuro ? "claro" : "oscuro");
+  });
+}
+
+// -----------------------------
 // Inicio
+// -----------------------------
 renderCatalogo();
 renderLista();
 actualizarEstadoOnline();
+aplicarTemaInicial();
 actualizarVistaHistorial();
