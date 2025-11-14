@@ -84,20 +84,6 @@ La aplicación aparecerá como una app normal en el menú del iPhone.
 
 Funciona incluso en modo avión.
 
-🗂 Estructura del proyecto
-📦 raiz del proyecto
- ┣ 📂 img
- │   ┣ 📂 frutas_verduras
- │   ┗ 📂 super
- ┣ 📂 icons
- │   ┣ icon-192.png
- │   ┗ icon-512.png
- ┣ 📜 index.html
- ┣ 📜 styles.css
- ┣ 📜 app.js
- ┣ 📜 service-worker.js
- ┣ 📜 manifest.json
- ┗ 📜 README.md
 
 🛠 Tecnologías utilizadas
 
