@@ -158,7 +158,6 @@ const btnBorrarHistorial = document.getElementById("btn-borrar-historial");
 // Footer DOM
 const appVersionEl = document.getElementById("app-version");
 const onlineStatusEl = document.getElementById("online-status");
-const btnToggleTema = document.getElementById("btn-toggle-tema");
 
 // Catálogo toggle
 const catalogSection = document.querySelector(".catalog-section");
@@ -1029,48 +1028,9 @@ window.addEventListener("online", actualizarEstadoOnline);
 window.addEventListener("offline", actualizarEstadoOnline);
 
 // -----------------------------
-// Tema claro / oscuro
-// -----------------------------
-function setTema(tema) {
-  if (tema === "oscuro") {
-    document.body.classList.add("dark-mode");
-  } else {
-    document.body.classList.remove("dark-mode");
-  }
-  localStorage.setItem("tema_preferencia", tema);
-  if (btnToggleTema) {
-    btnToggleTema.textContent =
-      tema === "oscuro" ? "Modo claro" : "Modo oscuro";
-  }
-}
-
-function aplicarTemaInicial() {
-  const guardado = localStorage.getItem("tema_preferencia");
-  let tema;
-
-  if (guardado === "oscuro" || guardado === "claro") {
-    tema = guardado;
-  } else {
-    tema = window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "oscuro"
-      : "claro";
-  }
-
-  setTema(tema);
-}
-
-if (btnToggleTema) {
-  btnToggleTema.addEventListener("click", () => {
-    const esOscuro = document.body.classList.contains("dark-mode");
-    setTema(esOscuro ? "claro" : "oscuro");
-  });
-}
-
-// -----------------------------
 // Inicio
 // -----------------------------
 renderCatalogo();
 renderLista();
 actualizarEstadoOnline();
-aplicarTemaInicial();
 actualizarVistaHistorial();
