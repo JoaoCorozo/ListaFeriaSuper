@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#ffbb55" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <meta charset="UTF-8" />
+    <title>Lista de Compras</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <h1>🛒 Lista de Compras</h1>
+        <p>
+          Elige Feria o Supermercado, agrega productos del catálogo o escríbelos
+          manualmente.
+        </p>
+
+        <div class="categoria-toggle">
+          <button type="button" class="cat-btn active" data-categoria="feria">
+            🥦 Feria
+          </button>
+          <button type="button" class="cat-btn" data-categoria="supermercado">
+            🛒 Supermercado
+          </button>
+        </div>
+        <button type="button" id="toggle-catalogo" class="btn-secondary btn-small toggle-catalogo-btn">
+          Ocultar catálogo
+        </button>
+
+      </header>
+
+      <main class="layout">
+        <!-- CATÁLOGO -->
+        <section class="catalog-section card">
+          <div class="section-header">
+            <h2>
+              Productos de <span id="categoria-actual-label">Feria</span>
+            </h2>
+            <p class="section-subtitle">
+              Toca un producto para agregarlo a tu lista.
+            </p>
+          </div>
+
+          <!-- Buscador / Autocomplete -->
+          <input
+            type="text"
+            id="buscador"
+            class="buscador-input"
+            placeholder="Buscar producto..."
+            autocomplete="off"
+          />
+
+          <div id="catalogo" class="catalog-grid"></div>
+        </section>
+
+        <!-- LISTA DE COMPRAS -->
+        <section class="list-section card">
+          <div class="section-header list-header">
+            <div>
+              <h2>Mi lista</h2>
+              <p class="section-subtitle">
+                Edita cantidades, unidades o marca como comprado.<br />
+                Mostrando: <strong id="label-lista-categoria">Feria</strong>
+              </p>
+            </div>
+            <div class="list-actions">
+              <button
+                type="button"
+                id="btn-borrar-comprados"
+                class="btn-secondary"
+              >
+                Borrar comprados
+              </button>
+              <button type="button" id="btn-borrar-todo" class="btn-danger">
+                Borrar todo
+              </button>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-label">Total</span>
+              <span class="stat-value" id="stat-total">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Pendientes</span>
+              <span class="stat-value" id="stat-pendientes">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Comprados</span>
+              <span class="stat-value" id="stat-comprados">0</span>
+            </div>
+          </div>
+
+          <!-- Agregar manual -->
+          <form id="form-manual" class="manual-form">
+            <input
+              type="text"
+              id="manual-nombre"
+              placeholder="Agregar producto manualmente (ej: Huevos, Jugo...)"
+              autocomplete="off"
+              required
+            />
+            <button type="submit" class="btn-primary btn-small">
+              + Agregar
+            </button>
+          </form>
+
+          <!-- Pendientes -->
+          <div class="lista-bloque">
+            <h3 class="lista-subtitulo">Pendientes</h3>
+            <ul id="lista-pendientes" class="lista"></ul>
+          </div>
+
+          <!-- Comprados (colapsable) -->
+          <div class="lista-bloque">
+            <h3
+              class="lista-subtitulo collapsible"
+              id="toggle-comprados"
+            >
+              Comprados (
+              <span id="count-comprados-header">0</span>
+              )
+              <span id="arrow-comprados">▼</span>
+            </h3>
+            <ul id="lista-comprados" class="lista"></ul>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal-agregar" class="modal oculto">
+      <div class="modal-contenido">
+        <h3 id="modal-titulo">Agregar producto</h3>
+        <p id="modal-producto-nombre" class="modal-producto-nombre"></p>
+
+        <form id="modal-form">
+          <div class="modal-grid">
+            <label>
+              Cantidad
+              <input
+                type="number"
+                id="modal-cantidad"
+                min="1"
+                value="1"
+                required
+              />
+            </label>
+
+            <label>
+              Unidad
+              <select id="modal-unidad"></select>
+            </label>
+          </div>
+
+          <div class="modal-buttons">
+            <button type="button" id="modal-cancelar" class="btn-secondary">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary">
+              Agregar a la lista
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+  }
+</script>
+
+    <script src="app.js"></script>
+  </body>
+</html>
