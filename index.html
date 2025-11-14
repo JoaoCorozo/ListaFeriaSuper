@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#ffbb55" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-
     <meta charset="UTF-8" />
     <title>Lista de Compras</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <link rel="stylesheet" href="styles.css" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#ffbb55" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
   </head>
   <body>
     <div class="app">
@@ -29,10 +31,14 @@
             🛒 Supermercado
           </button>
         </div>
-        <button type="button" id="toggle-catalogo" class="btn-secondary btn-small toggle-catalogo-btn">
+
+        <button
+          type="button"
+          id="toggle-catalogo"
+          class="btn-secondary btn-small toggle-catalogo-btn"
+        >
           Ocultar catálogo
         </button>
-
       </header>
 
       <main class="layout">
@@ -65,8 +71,9 @@
             <div>
               <h2>Mi lista</h2>
               <p class="section-subtitle">
-                Edita cantidades, unidades o marca como comprado.<br />
-                Mostrando: <strong id="label-lista-categoria">Feria</strong>
+                Edita cantidades, unidades, precios o marca como comprado.<br />
+                Mostrando:
+                <strong id="label-lista-categoria">Feria</strong>
               </p>
             </div>
             <div class="list-actions">
@@ -80,10 +87,17 @@
               <button type="button" id="btn-borrar-todo" class="btn-danger">
                 Borrar todo
               </button>
+              <button
+                type="button"
+                id="btn-exportar-lista"
+                class="btn-secondary"
+              >
+                Exportar lista
+              </button>
             </div>
           </div>
 
-          <!-- Stats -->
+          <!-- Stats rápidas -->
           <div class="stats">
             <div class="stat">
               <span class="stat-label">Total</span>
@@ -120,11 +134,8 @@
           </div>
 
           <!-- Comprados (colapsable) -->
-          <div class="lista-bloque">
-            <h3
-              class="lista-subtitulo collapsible"
-              id="toggle-comprados"
-            >
+                    <div class="lista-bloque">
+            <h3 class="lista-subtitulo collapsible" id="toggle-comprados">
               Comprados (
               <span id="count-comprados-header">0</span>
               )
@@ -132,8 +143,68 @@
             </h3>
             <ul id="lista-comprados" class="lista"></ul>
           </div>
+          <!-- Botón para guardar la compra en historial -->
+              <button
+                type="button"
+                id="btn-guardar-historial"
+                class="btn-primary btn-small guardar-historial-lista-btn">
+                Guardar compra en historial
+              </button>
+          
         </section>
+
       </main>
+
+      <!-- HISTORIAL / ESTADÍSTICAS -->
+            <section class="history-section card">
+        <div class="section-header">
+          <h2>Historial y estadísticas</h2>
+          <p class="section-subtitle">
+            Revisa qué compras más y en qué gastas más, filtrando por fecha.
+          </p>
+        </div>
+
+                <div class="history-controls">
+          <label>
+            Desde:
+            <input type="date" id="historial-desde" />
+          </label>
+
+          <label>
+            Hasta:
+            <input type="date" id="historial-hasta" />
+          </label>
+
+          <label>
+            Categoría:
+            <select id="historial-categoria">
+              <option value="todas">Todas</option>
+              <option value="feria">Solo Feria</option>
+              <option value="supermercado">Solo Supermercado</option>
+            </select>
+          </label>
+
+          <button
+            type="button"
+            id="btn-aplicar-rango"
+            class="btn-secondary btn-small"
+          >
+            Aplicar filtro
+          </button>
+        </div>
+
+
+        <div id="historial-resumen" class="history-summary">
+          <p>No hay datos en el historial todavía.</p>
+        </div>
+      </section>
+
+
+      <!-- FOOTER -->
+      <footer class="app-footer">
+        <span id="app-version"></span>
+        <span id="online-status" class="online-pill"></span>
+      </footer>
     </div>
 
     <!-- MODAL -->
@@ -159,6 +230,17 @@
               Unidad
               <select id="modal-unidad"></select>
             </label>
+
+            <label>
+              Precio total (opcional)
+              <input
+                type="number"
+                id="modal-precio"
+                min="0"
+                step="0.01"
+                placeholder="$"
+              />
+            </label>
           </div>
 
           <div class="modal-buttons">
@@ -172,11 +254,15 @@
         </form>
       </div>
     </div>
+
+    <!-- Service Worker -->
     <script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
-  }
-</script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("service-worker.js");
+        });
+      }
+    </script>
 
     <script src="app.js"></script>
   </body>
